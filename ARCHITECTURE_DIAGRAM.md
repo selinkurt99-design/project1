@@ -19,7 +19,7 @@ graph TD
     subgraph Power["POWER MANAGEMENT LAYER"]
         subgraph Battery["BATTERY CYCLE"]
             E1["PI Current<br/>Controller<br/>20kHz"]
-            F1["u_b"]
+            F1["PWM Duty<br/>u_b"]
             G1["Bidirectional<br/>Buck-Boost<br/>Converter"]
             H1["Lithium-ion<br/>Battery Pack"]
             E1 --> F1
@@ -29,7 +29,7 @@ graph TD
         
         subgraph Supercap["SUPERCAPACITOR CYCLE"]
             E2["PI Current<br/>Controller<br/>20kHz"]
-            F2["u_sc"]
+            F2["PWM Duty<br/>u_sc"]
             G2["Bidirectional<br/>Buck-Boost<br/>Converter"]
             H2["Supercapacitor"]
             E2 --> F2
@@ -59,8 +59,8 @@ graph TD
     style Battery fill:#d4e4f0
     style Supercap fill:#d4e4f0
     style Plant fill:#c9d9e8
-    style F1 fill:#fff9e6
-    style F2 fill:#fff9e6
+    style F1 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style F2 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
 ```
 
 ## Architecture Layers
@@ -80,13 +80,13 @@ graph TD
 
 #### Battery Cycle
 1. **PI Current Controller (20kHz)** → Generates control signal
-2. **u_b** → Converter control voltage
+2. **PWM Duty (u_b)** → Converter control voltage
 3. **Bidirectional Buck-Boost Converter** → Regulates voltage/current
 4. **Lithium-ion Battery Pack** → Primary energy source
 
 #### Supercapacitor Cycle
 1. **PI Current Controller (20kHz)** → Generates control signal
-2. **u_sc** → Converter control voltage
+2. **PWM Duty (u_sc)** → Converter control voltage
 3. **Bidirectional Buck-Boost Converter** → Regulates voltage/current
 4. **Supercapacitor** → Auxiliary power source (fast transients)
 
@@ -107,7 +107,7 @@ graph TD
 |-----------|------|----------|
 | **MPC** | Control Strategy | Optimizes energy distribution |
 | **PI Controllers (20kHz)** | Current Regulation | Maintains reference currents |
-| **u_b, u_sc** | Control Signals | Converter duty cycle inputs |
+| **PWM Duty (u_b, u_sc)** | Control Signals | Converter control voltages |
 | **DC/DC Converters** | Power Conditioning | Bi-directional power flow |
 | **DC Bus (500V)** | Power Distribution | Central distribution hub |
 | **Motor Inverter** | Power Conversion | AC/DC conversion for motor |
