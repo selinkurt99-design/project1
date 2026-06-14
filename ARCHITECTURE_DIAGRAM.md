@@ -4,83 +4,102 @@
 
 ```mermaid
 graph TD
-    A["Driver Input"] --> B["Vehicle Dynamics"]
-    B --> C["Power Demand<br/>P_dem"]
+    subgraph Perception["PERCEPTION LAYER"]
+        A["Drive Cycle Profile<br/>WLTP / FTP-75"]
+        B["Longitudinal Driver<br/>Model<br/>PI Velocity Tracker"]
+        C["Longitudinal Vehicle<br/>Dynamics<br/>Plant"]
+        A --> B --> C
+    end
     
-    C --> D["MPC<br/>Controller"]
-    E["System State<br/>SoC, Voltage"] --> D
+    subgraph Control["CONTROL LAYER"]
+        D["Discrete-Time Model<br/>Predictive Control<br/>MPC"]
+    end
     
-    D --> F["Battery<br/>Current Ref"]
-    D --> G["Supercap<br/>Current Ref"]
+    subgraph Power["POWER MANAGEMENT LAYER"]
+        subgraph Battery["BATTERY CYCLE"]
+            E1["PI Current<br/>Controller<br/>ph,ref"]
+            F1["PWM Duty<br/>ph"]
+            G1["Bidirectional<br/>Buck-Boost<br/>Converter"]
+            H1["Lithium-ion<br/>Battery Pack"]
+            E1 --> F1 --> G1 --> H1
+        end
+        
+        subgraph Supercap["SUPERCAPACITOR CYCLE"]
+            E2["PI Current<br/>Controller<br/>sc,ref"]
+            F2["PWM Duty<br/>sc"]
+            G2["Bidirectional<br/>Buck-Boost<br/>Converter"]
+            H2["Supercapacitor"]
+            E2 --> F2 --> G2 --> H2
+        end
+    end
     
-    F --> H["Battery<br/>Controller"]
-    G --> I["SC<br/>Controller"]
+    subgraph Plant["POWER OUTPUT"]
+        I["DC Bus<br/>500V"]
+        J["Traction Motor<br/>Inverter/PM Motor"]
+    end
     
-    H --> J["Battery<br/>Converter"]
-    I --> K["SC<br/>Converter"]
+    C --> D
+    D --> E1
+    D --> E2
+    H1 --> I
+    H2 --> I
+    I --> J
+    J -.-> C
+    H1 -.-> D
+    H2 -.-> D
     
-    J --> L["500V DC Bus"]
-    K --> L
-    
-    L --> M["Motor Inverter"]
-    M --> N["Mechanical Power"]
-    
-    N -.-> B
-    J -.-> E
-    K -.-> E
-    
-    style A fill:#e3f2fd
-    style B fill:#e3f2fd
-    style C fill:#fff3e0
-    style D fill:#f3e5f5
-    style E fill:#f3e5f5
-    style F fill:#e8f5e9
-    style G fill:#e8f5e9
-    style H fill:#e8f5e9
-    style I fill:#e8f5e9
-    style J fill:#e8f5e9
-    style K fill:#e8f5e9
-    style L fill:#fce4ec
-    style M fill:#fce4ec
-    style N fill:#fce4ec
+    style Perception fill:#c9d9e8
+    style Control fill:#b3cce6
+    style Power fill:#9db8e0
+    style Battery fill:#d4e4f0
+    style Supercap fill:#d4e4f0
+    style Plant fill:#c9d9e8
 ```
 
 ## Architecture Layers
 
-### 📊 Layer 1: Perception (Input)
-- Receive driver commands
-- Calculate vehicle dynamics
-- Determine power demand
+### 📋 Layer 1: Perception (Input)
+- **Drive Cycle Profile**: Defines the driving scenario (WLTP, FTP-75)
+- **Longitudinal Driver Model**: PI velocity tracker simulates driver behavior
+- **Vehicle Dynamics Plant**: Models the vehicle's longitudinal motion
 
-### 🎯 Layer 2: Decision (Optimization)
-- **MPC Controller**: Decides optimal energy distribution between battery and supercapacitor
-- Monitors system state (SoC, voltage)
-- Calculates reference current for each source
+### 🎯 Layer 2: Control (Decision)
+- **Discrete-Time MPC**: 
+  - Receives vehicle velocity and power demand
+  - Optimizes energy distribution between battery and supercapacitor
+  - Outputs reference currents for both sources
 
-### ⚡ Layer 3: Control (Execution)
-- PI controllers track reference currents
-- DC/DC converters transform power
-- Operates at 20 kHz (fast response)
+### ⚡ Layer 3: Power Management (Execution)
 
-### 🔋 Layer 4: Power (Physical)
-- Battery and supercapacitor combine
-- 500V DC bus delivers power to motor inverter
-- Motor converts electrical to mechanical power
+#### Battery Cycle
+1. PI Current Controller → Generates reference signal
+2. PWM Duty → Controls switching frequency
+3. Bidirectional Buck-Boost Converter → Regulates voltage/current
+4. Lithium-ion Battery Pack → Primary energy source
 
-## Operation Flow
+#### Supercapacitor Cycle
+1. PI Current Controller → Generates reference signal
+2. PWM Duty → Controls switching frequency
+3. Bidirectional Buck-Boost Converter → Regulates voltage/current
+4. Supercapacitor → Auxiliary power source (fast transients)
 
-1. **Input** → Driver presses pedal, power demand is determined
-2. **Decision** → MPC calculates optimal distribution
-3. **Control** → Controllers adjust currents to targets
-4. **Output** → Motor produces mechanical power
-5. **Feedback** → System state updates (dashed lines)
+### 🔋 Layer 4: Power Output
+- **DC Bus (500V)**: Combines power from battery and supercapacitor
+- **Traction Motor Inverter/PM Motor**: Converts electrical to mechanical power
+
+## System Feedback
+
+- **Dashed lines** represent feedback paths:
+  - Motor output → Vehicle dynamics (mechanical coupling)
+  - Battery state → MPC (energy management)
+  - Supercapacitor state → MPC (power distribution)
 
 ## Key Features
 
-| Feature | Description |
-|---------|-------------|
-| **Power Sources** | Battery + Supercapacitor |
-| **Power Bus** | 500V DC |
-| **Control Frequency** | 20 kHz |
-| **Control Method** | Model Predictive Control (MPC) |
-| **Feedback** | SoC, Voltage, Torque |
+| Component | Role | Function |
+|-----------|------|----------|
+| **MPC** | Control Strategy | Optimizes energy distribution |
+| **PI Controllers** | Current Regulation | Maintains reference currents |
+| **DC/DC Converters** | Power Conditioning | Bi-directional power flow |
+| **DC Bus** | Power Distribution | 500V central distribution |
+| **Motor Inverter** | Power Conversion | AC/DC conversion for motor |
