@@ -1,29 +1,29 @@
-# Enerji Yönetim Sistemi Mimarisi
+# Energy Management System Architecture
 
-## Sistem Genel Bakış
+## System Overview
 
 ```mermaid
 graph TD
-    A["Şoför Girişi"] --> B["Araç Dinamikleri"]
-    B --> C["Güç Talebi<br/>P_dem"]
+    A["Driver Input"] --> B["Vehicle Dynamics"]
+    B --> C["Power Demand<br/>P_dem"]
     
-    C --> D["MPC<br/>Kontrolcü"]
-    E["Sistem Durumu<br/>SoC, V"] --> D
+    C --> D["MPC<br/>Controller"]
+    E["System State<br/>SoC, Voltage"] --> D
     
-    D --> F["Batarya<br/>Akımı Referansı"]
-    D --> G["Süperkapasitör<br/>Akımı Referansı"]
+    D --> F["Battery<br/>Current Ref"]
+    D --> G["Supercap<br/>Current Ref"]
     
-    F --> H["Batarya<br/>Kontrolcüsü"]
-    G --> I["SC<br/>Kontrolcüsü"]
+    F --> H["Battery<br/>Controller"]
+    G --> I["SC<br/>Controller"]
     
-    H --> J["Batarya<br/>Dönüştürücüsü"]
-    I --> K["SC<br/>Dönüştürücüsü"]
+    H --> J["Battery<br/>Converter"]
+    I --> K["SC<br/>Converter"]
     
-    J --> L["500V DC Güç Hattı"]
+    J --> L["500V DC Bus"]
     K --> L
     
-    L --> M["Motor Sürücü"]
-    M --> N["Mekanik Güç"]
+    L --> M["Motor Inverter"]
+    M --> N["Mechanical Power"]
     
     N -.-> B
     J -.-> E
@@ -45,41 +45,42 @@ graph TD
     style N fill:#fce4ec
 ```
 
-## Katmanlar Nedir?
+## Architecture Layers
 
-### 📊 1. Algılama Katmanı (Giriş)
-- Şoför komutları alınır
-- Araç dinamikleri hesaplanır
-- Güç talebi belirlenir
+### 📊 Layer 1: Perception (Input)
+- Receive driver commands
+- Calculate vehicle dynamics
+- Determine power demand
 
-### 🎯 2. Karar Katmanı (Optimizasyon)
-- **MPC**: Batarya ve süperkapasitör arasında optimal enerji dağılımını belirler
-- Sistem durumunu (SoC, gerilim) takip eder
-- Her bir kaynağın referans akımını hesaplar
+### 🎯 Layer 2: Decision (Optimization)
+- **MPC Controller**: Decides optimal energy distribution between battery and supercapacitor
+- Monitors system state (SoC, voltage)
+- Calculates reference current for each source
 
-### ⚡ 3. Kontrol Katmanı (Uygulanış)
-- PI kontrolcüler referans akımları takip eder
-- DC/DC dönüştürücüler güçü dönüştürür
-- 20 kHz frekansında çalışır (hızlı yanıt)
+### ⚡ Layer 3: Control (Execution)
+- PI controllers track reference currents
+- DC/DC converters transform power
+- Operates at 20 kHz (fast response)
 
-### 🔋 4. Güç Katmanı (Fiziksel)
-- Batarya ve süperkapasitör birleştirilir
-- 500V DC hattı üzerinden motor sürücüsüne güç verilir
-- Motor mekanik güce dönüştürür
+### 🔋 Layer 4: Power (Physical)
+- Battery and supercapacitor combine
+- 500V DC bus delivers power to motor inverter
+- Motor converts electrical to mechanical power
 
-## İşleyiş Akışı
+## Operation Flow
 
-1. **Giriş** → Şoför pedal basar, güç talebi belirlenir
-2. **Karar** → MPC optimal dağılımı hesaplar
-3. **Kontrol** → Kontrolcüler hedef akımları ayarlar
-4. **Çıkış** → Motor güç üretir
-5. **Geri Bildirim** → Sistem durumu güncellenir (kesikli çizgiler)
+1. **Input** → Driver presses pedal, power demand is determined
+2. **Decision** → MPC calculates optimal distribution
+3. **Control** → Controllers adjust currents to targets
+4. **Output** → Motor produces mechanical power
+5. **Feedback** → System state updates (dashed lines)
 
-## Temel Özellikler
+## Key Features
 
-| Özellik | Açıklama |
-|---------|----------|
-| **Kaynaklar** | Batarya + Süperkapasitör |
-| **Güç Hattı** | 500V DC |
-| **Kontrol Hızı** | 20 kHz |
-| **Yöntem** | Model Öngörülü Kontrol (MPC) |
+| Feature | Description |
+|---------|-------------|
+| **Power Sources** | Battery + Supercapacitor |
+| **Power Bus** | 500V DC |
+| **Control Frequency** | 20 kHz |
+| **Control Method** | Model Predictive Control (MPC) |
+| **Feedback** | SoC, Voltage, Torque |
